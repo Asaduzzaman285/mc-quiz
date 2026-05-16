@@ -1,0 +1,42 @@
+services:
+    mcquiz-api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: mcquiz-api
+        restart: unless-stopped
+        volumes:
+            - .:/app
+        ports:
+            - "8000:8000"
+        environment:
+            - APP_ENV=local
+            - APP_DEBUG=true
+        depends_on:
+            - mcquiz-db
+        networks:
+            - mcquiz-network
+        command: php artisan serve --host=0.0.0.0 --port=8000
+
+    mcquiz-db:
+        image: mysql:8.0
+        container_name: mcquiz-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: mcquiz_db
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_PASSWORD: root
+            MYSQL_USER: user
+        ports:
+            - "3307:3306"
+        volumes:
+            - mcquiz-db-data:/var/lib/mysql
+        networks:
+            - mcquiz-network
+
+networks:
+    mcquiz-network:
+        driver: bridge
+
+volumes:
+    mcquiz-db-data:
