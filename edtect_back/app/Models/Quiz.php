@@ -10,11 +10,13 @@ class Quiz extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'magazine_id', 'date', 'deadline', 'resultDate', 'total_marks', 'duration_minutes'
+        'name', 'title', 'magazine_id', 'date', 'time', 'duration',
+        'deadline', 'resultDate', 'total_marks', 'duration_minutes',
+        'questions_count', 'status', 'prize_pool'
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date'     => 'date',
         'deadline' => 'date',
     ];
 
@@ -23,11 +25,26 @@ class Quiz extends Model
         return $this->belongsTo(Magazine::class);
     }
 
-    public function questions() {
+    public function questions()
+    {
         return $this->hasMany(Question::class);
     }
 
-    public function results() {
+    public function results()
+    {
         return $this->hasMany(UserQuizResult::class);
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(QuizSession::class);
+    }
+
+    /**
+     * Get questions without the correct_option field (for frontend delivery)
+     */
+    public function questionsForFrontend()
+    {
+        return $this->hasMany(Question::class)->select(['id', 'quiz_id', 'question_text', 'options', 'category']);
     }
 }

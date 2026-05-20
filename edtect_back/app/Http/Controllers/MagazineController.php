@@ -58,18 +58,31 @@ class MagazineController extends Controller
 
         DB::beginTransaction();
         try {
-            // In a real app, this would happen after payment gateway callback
             $purchase = MagazinePurchase::create([
-                'user_id' => $user->id,
-                'magazine_id' => $magazine->id,
-                'amount' => $magazine->price,
+                'user_id'        => $user->id,
+                'magazine_id'    => $magazine->id,
+                'amount'         => $magazine->price,
                 'payment_status' => 'completed',
                 'transaction_id' => 'MOCK_' . uniqid(),
-                'payment_method' => 'wallet', // or bkash, nagad etc
+                'payment_method' => 'wallet',
             ]);
 
+            // Update user subscription_status to active
+            $user->update([
+                'subscription_status'  => 'active',
+                'subscription_expiry'  => now()->addDays(30)->toDateString(),
+            ]);
+
+            // Return purchase with magazine data so frontend can use pdf_path
+            $purchase->load('magazine');
+
             DB::commit();
-            return $this->set_response($purchase, 200, 'success', ['Magazine purchased successfully.']);
+            return $this->set_response([
+                'purchase'    => $purchase,
+                'magazine'    => $magazine,
+                'pdf_path'    => $magazine->pdf_path,
+                'is_purchased'=> true,
+            ], 200, 'success', ['Magazine purchased successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->set_response(null, 500, 'error', [$e->getMessage()]);

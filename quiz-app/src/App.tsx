@@ -67,8 +67,9 @@ export default function App() {
   const saved = (() => { try { return JSON.parse(localStorage.getItem('mcquiz_state3') || '{}'); } catch { return {}; } })();
   const [page, setPage] = useState(saved.page || 'home');
   const [isLoggedIn, setIsLoggedIn] = useState(saved.isLoggedIn || false);
-  const [purchasedMags, setPurchasedMags] = useState(saved.purchasedMags || []);
+  const [purchasedMags, setPurchasedMags] = useState<number[]>([]); // always loaded from API, never from localStorage
   const [payingMag, setPayingMag] = useState(null);
+  const [quizMag, setQuizMag] = useState<any>(null);
   const [lang, setLang] = useState(saved.lang || 'bn');
   const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
   const [user, setUser] = useState<any>(null);
@@ -80,15 +81,16 @@ export default function App() {
 
   const hasPurchased = purchasedMags.length > 0;
   const accent = hasPurchased ? tweaks.activeAccent : tweaks.accentColor;
-  
+
   // T helper function
   const T = (key: string) => t(lang, key);
 
   const bodyFont = lang === 'bn' ? "'Anek Bangla', sans-serif" : 'Inter, sans-serif';
 
   useEffect(() => {
-    localStorage.setItem('mcquiz_state3', JSON.stringify({ page, isLoggedIn, purchasedMags, lang }));
-  }, [page, isLoggedIn, purchasedMags, lang]);
+    localStorage.setItem('mcquiz_state3', JSON.stringify({ page, isLoggedIn, lang }));
+    // purchasedMags intentionally NOT saved — always re-fetched from API on load
+  }, [page, isLoggedIn, lang]);
 
   const refreshData = async () => {
     try {
@@ -104,21 +106,44 @@ export default function App() {
       } else {
         setIsLoggedIn(false);
         setUser(null);
+        setPurchasedMags([]); // no token = no purchases
       }
-      if (mags) setMagazines(mags);
-      if (qzs) setQuizzes(qzs);
-      if (lb) setLeaderboard(lb);
+      if (mags && Array.isArray(mags)) {
+        setMagazines(mags);
+        // Always set purchasedMags from API — never trust localStorage
+        const purchased = mags
+          .filter((m: any) => m.is_purchased)
+          .map((m: any) => m.id);
+        setPurchasedMags(purchased); // replace, don't merge
+      }
+      if (qzs && Array.isArray(qzs)) setQuizzes(qzs);
+      if (lb && Array.isArray(lb)) setLeaderboard(lb);
     } catch (err) {
       console.error("Fetch failed", err);
     } finally {
       setLoading(false);
     }
   };
-  const openPdf = (path: string) => {
-    if (!path) return;
+  const openPdf = (path: string, magId?: number, magName?: string) => {
+    if (!path && !magId) {
+      alert(lang === 'bn' ? 'এই ম্যাগাজিনের PDF এখনো আপলোড হয়নি।' : 'No PDF available for this magazine yet.');
+      return;
+    }
+    // Use secure download endpoint if we have a magazine ID (enforces purchase check server-side)
+    if (magId) {
+      MCQUIZ_API.downloadMagazine(magId, magName || 'magazine');
+      return;
+    }
+    // Fallback: direct storage link
     const base = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:8000';
     const url = path.startsWith('http') ? path : `${base}/storage/${path}`;
-    window.open(url, '_blank');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = path.split('/').pop() || 'magazine.pdf';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
   // Initial Data Fetch
   useEffect(() => {
@@ -130,6 +155,10 @@ export default function App() {
       if (!isLoggedIn) { setPage('signup'); window.scrollTo({ top: 0 }); return; }
       setPayingMag(extra);
       setPage('payment');
+    } else if (p === 'enter-quiz') {
+      // extra = magazine object that has a linked quiz
+      setQuizMag(extra);
+      setPage('quiz-lobby');
     } else {
       setPage(p);
     }
@@ -140,6 +169,16 @@ export default function App() {
     setPurchasedMags(prev => prev.includes(magId) ? prev : [...prev, magId]);
     refreshData();
     navigate('dashboard');
+  };
+
+  // Called when user navigates to leaderboard — refresh global leaderboard state
+  const refreshLeaderboard = async () => {
+    try {
+      const lb = await MCQUIZ_API.getLeaderboard();
+      if (lb && Array.isArray(lb)) setLeaderboard(lb);
+    } catch (err) {
+      console.error('Leaderboard refresh failed', err);
+    }
   };
 
   useEffect(() => {
@@ -158,16 +197,19 @@ export default function App() {
     window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: value } }, '*');
   };
 
+  // Active quiz: prefer the one linked to the magazine the user is entering, else first quiz
+  const activeQuiz = quizMag?.quiz ?? quizzes.find((q: any) => q.magazine_id === quizMag?.id) ?? quizzes[0];
+
   const commonProps = { navigate, isLoggedIn, hasPurchased, lang, T, magazines, quizzes, leaderboard, purchasedMags, openPdf };
 
   const pages: Record<string, React.ReactNode> = {
     'home': <HomePage {...commonProps} />,
     'store': <MagazineStore {...commonProps} purchasedMags={purchasedMags} magazines={magazines} />,
-    'quiz-lobby': <QuizLobby {...commonProps} quizzes={quizzes} />,
-    'live-quiz': <LiveQuiz navigate={navigate} lang={lang} T={T} quizId={quizzes[0]?.id} />,
-    'leaderboard': <Leaderboard navigate={navigate} lang={lang} T={T} leaderboard={leaderboard} />,
+    'quiz-lobby': <QuizLobby {...commonProps} quizzes={quizzes} activeMagazine={quizMag} activeQuiz={activeQuiz} />,
+    'live-quiz': <LiveQuiz navigate={navigate} lang={lang} T={T} quizId={activeQuiz?.id} />,
+    'leaderboard': <Leaderboard navigate={navigate} lang={lang} T={T} leaderboard={leaderboard} onMount={refreshLeaderboard} />,
     'dashboard': isLoggedIn
-      ? <Dashboard navigate={navigate} user={user} magazines={magazines} purchasedMags={purchasedMags} lang={lang} T={T} />
+      ? <Dashboard navigate={navigate} user={user} magazines={magazines} purchasedMags={purchasedMags} lang={lang} T={T} openPdf={openPdf} />
       : <Auth mode="login" navigate={navigate} onLogin={() => { refreshData(); navigate('home'); }} lang={lang} T={T} />,
     'how-to-play': <HowToPlay {...commonProps} />,
     'login': <Auth mode="login" navigate={navigate} onLogin={() => { refreshData(); navigate('home'); }} lang={lang} T={T} />,
@@ -194,7 +236,13 @@ export default function App() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         {showNav && (
           <Nav currentPage={page} navigate={navigate} isLoggedIn={isLoggedIn} user={user}
-            onLogout={() => { setIsLoggedIn(false); setUser(null); navigate('home'); }}
+            onLogout={() => {
+              setIsLoggedIn(false);
+              setUser(null);
+              setPurchasedMags([]);  // clear purchases on logout
+              localStorage.removeItem('mcquiz_state3');
+              navigate('home');
+            }}
             accent={accent} lang={lang} setLang={setLang} T={T} />
         )}
 

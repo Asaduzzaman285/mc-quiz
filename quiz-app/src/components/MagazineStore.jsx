@@ -4,7 +4,7 @@ import { MCQUIZ_DATA } from './data';
 // Uniform buy button color
 const BUY_COLOR = '#7C6FFF';
 
-export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purchasedMags, lang, T, magazines }) {
+export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purchasedMags, lang, T, magazines, openPdf }) {
   const purchased = purchasedMags || [];
   const bodyFont = lang === 'bn' ? "'Anek Bangla', sans-serif" : 'Inter, sans-serif';
   const featured = magazines?.[0] || { name: '...', month: '...', topics: [], id: 0 };
@@ -50,9 +50,9 @@ export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purc
                 gap: 10, cursor: 'pointer', transition: 'all 0.2s', overflow: 'hidden',
                 position: 'relative',
               }}
-              title="Click to upload cover image"
-              onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(124,111,255,0.7)'; e.currentTarget.style.background='rgba(124,111,255,0.14)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(124,111,255,0.35)'; e.currentTarget.style.background='linear-gradient(145deg, rgba(124,111,255,0.18), rgba(124,111,255,0.06))'; }}>
+                title="Click to upload cover image"
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,111,255,0.7)'; e.currentTarget.style.background = 'rgba(124,111,255,0.14)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(124,111,255,0.35)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(124,111,255,0.18), rgba(124,111,255,0.06))'; }}>
                 {/* MC watermark */}
                 <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 900, fontSize: 40, color: 'rgba(124,111,255,0.25)', lineHeight: 1 }}>MC</div>
                 <div style={{ fontFamily: bodyFont, fontSize: 11, color: 'rgba(124,111,255,0.5)', textAlign: 'center', lineHeight: 1.5, padding: '0 12px' }}>
@@ -118,11 +118,11 @@ export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purc
                   <span style={{ fontFamily: bodyFont, fontSize: 13, color: '#7A82A8', marginLeft: 8 }}>{T('mag_quiz_included')}</span>
                 </div>
                 {purchased.includes(featured.id) ? (
-                  <button onClick={() => openPdf(featured.pdf_path)} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 11, padding: '12px 24px', color: '#22C55E', fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{T('mag_read')}</button>
+                  <button onClick={() => openPdf(featured.pdf_path, featured.id, featured.name)} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 11, padding: '12px 24px', color: '#22C55E', fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{T('mag_read')}</button>
                 ) : (
                   <button onClick={() => navigate('buy-magazine', featured)} style={{ background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none', borderRadius: 11, padding: '12px 28px', color: '#fff', fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(124,111,255,0.4)', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 8px 26px rgba(124,111,255,0.55)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 18px rgba(124,111,255,0.4)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 26px rgba(124,111,255,0.55)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(124,111,255,0.4)'; }}
                   >{T('mag_buy')} — ৳৫০</button>
                 )}
               </div>
@@ -157,7 +157,7 @@ export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purc
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 22 }}>
           {magazines.map(mag => {
             const owned = purchased.includes(mag.id);
-            return <MagCard key={mag.id} mag={mag} owned={owned} onBuy={() => navigate('buy-magazine', mag)} lang={lang} T={T} bodyFont={bodyFont} />;
+            return <MagCard key={mag.id} mag={mag} owned={owned} onBuy={() => navigate('buy-magazine', mag)} onRead={() => openPdf && openPdf(mag.pdf_path, mag.id, mag.name)} onQuiz={() => navigate('enter-quiz', mag)} lang={lang} T={T} bodyFont={bodyFont} />;
           })}
         </div>
 
@@ -171,7 +171,7 @@ export default function MagazineStore({ navigate, isLoggedIn, hasPurchased, purc
   );
 }
 
-function MagCard({ mag, owned, onBuy, lang, T, bodyFont }) {
+function MagCard({ mag, owned, onBuy, onRead, onQuiz, lang, T, bodyFont }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -213,21 +213,32 @@ function MagCard({ mag, owned, onBuy, lang, T, bodyFont }) {
 
         {/* Topics */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 16 }}>
-          {mag.topics.slice(0,3).map(t => (
+          {mag.topics.slice(0, 3).map(t => (
             <span key={t} style={{ background: 'rgba(124,111,255,0.08)', border: '1px solid rgba(124,111,255,0.2)', borderRadius: 5, padding: '2px 8px', fontFamily: bodyFont, fontSize: 11, color: '#8B8FBF' }}>{t}</span>
           ))}
         </div>
 
-        {/* Price + CTA — uniform button color */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Price + CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 20, color: '#F0F2FF' }}>৳৫০</span>
           {owned ? (
-            <button style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '8px 16px', color: '#22C55E', fontFamily: bodyFont, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{T('mag_read')}</button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={onRead}
+                style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '7px 12px', color: '#22C55E', fontFamily: bodyFont, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                📄 {T('mag_read')}
+              </button>
+              {mag.quiz && (
+                <button onClick={onQuiz}
+                  style={{ background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none', borderRadius: 8, padding: '7px 12px', color: '#fff', fontFamily: bodyFont, fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,111,255,0.4)' }}>
+                  ⚡ Quiz
+                </button>
+              )}
+            </div>
           ) : (
             <button onClick={onBuy}
               style={{ background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none', borderRadius: 8, padding: '8px 18px', color: '#fff', fontFamily: bodyFont, fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,111,255,0.35)', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 20px rgba(124,111,255,0.55)'; e.currentTarget.style.transform='translateY(-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow='0 4px 14px rgba(124,111,255,0.35)'; e.currentTarget.style.transform='none'; }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,111,255,0.55)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,111,255,0.35)'; e.currentTarget.style.transform = 'none'; }}
             >{T('mag_buy')}</button>
           )}
         </div>

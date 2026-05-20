@@ -22,13 +22,13 @@ function CountdownTimer({ targetDate, compact, lang }) {
 
   const Box = ({ v, label }) => (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ 
-        background: 'rgba(28,32,64,0.8)', 
-        border: '1px solid rgba(124,111,255,0.25)', 
-        borderRadius: 14, padding: '12px 14px', 
-        minWidth: 64, fontFamily: 'Space Grotesk, sans-serif', 
-        fontWeight: 800, fontSize: 32, color: '#A78BFA', 
-        lineHeight: 1, boxShadow: '0 4px 15px rgba(0,0,0,0.2)' 
+      <div style={{
+        background: 'rgba(28,32,64,0.8)',
+        border: '1px solid rgba(124,111,255,0.25)',
+        borderRadius: 14, padding: '12px 14px',
+        minWidth: 64, fontFamily: 'Space Grotesk, sans-serif',
+        fontWeight: 800, fontSize: 32, color: '#A78BFA',
+        lineHeight: 1, boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
       }}>
         {String(v).padStart(2, '0')}
       </div>
@@ -53,7 +53,15 @@ function MiniLeaderboard({ navigate, lang, T, leaderboard }) {
   const medals = { 1: '#D4A843', 2: '#A8A8B3', 3: '#CD7F32' };
   const VISIBLE = 7;
   const rowH = 60;
-  const list = leaderboard || [];
+  // Normalise API response fields
+  const list = (leaderboard || []).map((p, i) => ({
+    rank: p.rank ?? i + 1,
+    name: p.display_name ?? p.name ?? 'Unknown',
+    avatar: p.avatar ?? (p.display_name ?? p.name ?? '?')[0].toUpperCase(),
+    score: p.correct_count ?? p.score ?? 0,
+    district: p.district ?? '—',
+    prize: p.prize ?? '—',
+  }));
   const maxScroll = Math.max(0, (list.length - VISIBLE) * rowH);
   const [scrollTop, setScrollTop] = useState(0);
   const bodyFont = lang === 'bn' ? "'Anek Bangla', sans-serif" : 'Inter, sans-serif';
@@ -67,8 +75,8 @@ function MiniLeaderboard({ navigate, lang, T, leaderboard }) {
             <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 36, color: '#F0F2FF', margin: 0, letterSpacing: '-1.2px' }}>{T('lb_top_winners')}</h2>
           </div>
           <button onClick={() => navigate('leaderboard')} style={{ background: 'transparent', border: '1px solid rgba(124,111,255,0.25)', borderRadius: 10, padding: '10px 22px', color: '#A78BFA', fontFamily: bodyFont, fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.5)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.25)'; }}>{T('lb_view_full')}</button>
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.25)'; }}>{T('lb_view_full')}</button>
         </div>
 
         <div style={{ background: 'rgba(28,32,64,0.5)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 24, overflow: 'hidden', backdropFilter: 'blur(16px)' }}>
@@ -114,7 +122,7 @@ function MiniLeaderboard({ navigate, lang, T, leaderboard }) {
   );
 }
 
-function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, leaderboard }) {
+function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, leaderboard, purchasedMags = [], openPdf }) {
   const featured = magazines?.[0] || { name: 'MCQuiz', month: '...', topics: [] };
   const bodyFont = lang === 'bn' ? "'Anek Bangla', sans-serif" : 'Inter, sans-serif';
 
@@ -122,7 +130,7 @@ function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, lead
     <div style={{ minHeight: '100vh', color: '#F0F2FF' }}>
       <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: 1240, margin: '0 auto', padding: '120px 24px 80px', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 60, alignItems: 'center', width: '100%' }}>
-          
+
           {/* Left Column: Hero Text */}
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(124,111,255,0.1)', border: '1px solid rgba(124,111,255,0.25)', borderRadius: 50, padding: '6px 16px', marginBottom: 28 }}>
@@ -138,32 +146,32 @@ function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, lead
               {T('hero_desc')} <strong style={{ color: '#D4A843' }}>{T('hero_prize_text')}</strong>।
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <button onClick={() => navigate(isLoggedIn ? 'store' : 'signup')} style={{ 
-                background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none', 
-                borderRadius: 14, padding: '14px 32px', color: '#fff', 
-                fontFamily: bodyFont, fontSize: 16, fontWeight: 700, 
-                cursor: 'pointer', boxShadow: '0 8px 25px rgba(124,111,255,0.4)', 
-                transition: 'all 0.3s' 
+              <button onClick={() => navigate(isLoggedIn ? 'store' : 'signup')} style={{
+                background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none',
+                borderRadius: 14, padding: '14px 32px', color: '#fff',
+                fontFamily: bodyFont, fontSize: 16, fontWeight: 700,
+                cursor: 'pointer', boxShadow: '0 8px 25px rgba(124,111,255,0.4)',
+                transition: 'all 0.3s'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(124,111,255,0.5)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(124,111,255,0.4)'; }}>
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(124,111,255,0.5)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(124,111,255,0.4)'; }}>
                 {T('hero_btn_get')}</button>
-              <button onClick={() => navigate('how-to-play')} style={{ 
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', 
-                borderRadius: 14, padding: '14px 28px', color: '#F0F2FF', 
-                fontFamily: bodyFont, fontSize: 16, fontWeight: 600, 
-                cursor: 'pointer', transition: 'all 0.3s' 
+              <button onClick={() => navigate('how-to-play')} style={{
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 14, padding: '14px 28px', color: '#F0F2FF',
+                fontFamily: bodyFont, fontSize: 16, fontWeight: 600,
+                cursor: 'pointer', transition: 'all 0.3s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}>
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}>
                 {T('hero_btn_how')}</button>
             </div>
-            
+
             {/* Stats row */}
             <div style={{ display: 'flex', gap: 40, marginTop: 52, alignItems: 'center' }}>
               {[
-                ['১২,০০০+', T('hero_members')], 
-                ['৳১,৫০,০০০+', T('hero_prizes_paid')], 
+                ['১২,০০০+', T('hero_members')],
+                ['৳১,৫০,০০০+', T('hero_prizes_paid')],
                 ['২৪', T('hero_editions')]
               ].map(([v, l]) => (
                 <div key={l}>
@@ -176,20 +184,20 @@ function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, lead
 
           {/* Right Column: Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            
+
             {/* Magazine Card */}
             <div style={{ background: 'rgba(28,32,64,0.6)', border: '1px solid rgba(124,111,255,0.2)', borderRadius: 24, padding: 28, backdropFilter: 'blur(20px)', position: 'relative' }}>
               <div style={{ display: 'flex', gap: 24, alignItems: 'start' }}>
                 {/* Visual Box */}
-                <div style={{ 
-                  width: 90, height: 120, borderRadius: 14, flexShrink: 0, 
-                  background: 'rgba(124,111,255,0.15)', border: '1px solid rgba(124,111,255,0.3)', 
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 
+                <div style={{
+                  width: 90, height: 120, borderRadius: 14, flexShrink: 0,
+                  background: 'rgba(124,111,255,0.15)', border: '1px solid rgba(124,111,255,0.3)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4
                 }}>
                   <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 900, fontSize: 24, color: '#A78BFA' }}>MC</div>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: 700, color: '#7A82A8', textAlign: 'center', lineHeight: 1.3 }}>APRIL<br/>2026</div>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: 700, color: '#7A82A8', textAlign: 'center', lineHeight: 1.3 }}>APRIL<br />2026</div>
                 </div>
-                
+
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'inline-block', background: 'rgba(124,111,255,0.1)', border: '1px solid rgba(124,111,255,0.25)', borderRadius: 8, padding: '4px 12px', marginBottom: 12 }}>
                     <span style={{ fontFamily: bodyFont, fontSize: 12, color: '#A78BFA', fontWeight: 600 }}>{T('new_issue')}</span>
@@ -205,30 +213,30 @@ function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, lead
                   </div>
                 </div>
               </div>
-              
+
               <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <div>
                   <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 24, color: '#F0F2FF' }}>৳৫০</span>
                   <span style={{ fontFamily: bodyFont, fontSize: 13, color: '#7A82A8', marginLeft: 8 }}>{T('mag_quiz_included')}</span>
                 </div>
                 {purchasedMags.includes(featured.id) ? (
-                  <button onClick={() => openPdf(featured.pdf_path)} style={{ 
-                    background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', 
-                    borderRadius: 12, padding: '10px 24px', color: '#22C55E', 
-                    fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' 
+                  <button onClick={() => openPdf(featured.pdf_path, featured.id, featured.name)} style={{
+                    background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)',
+                    borderRadius: 12, padding: '10px 24px', color: '#22C55E',
+                    fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.12)'; }}>
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.12)'; }}>
                     {T('mag_read')}
                   </button>
                 ) : (
-                  <button onClick={() => navigate('buy-magazine', featured)} style={{ 
-                    background: 'rgba(124,111,255,0.12)', border: '1px solid rgba(124,111,255,0.3)', 
-                    borderRadius: 12, padding: '10px 22px', color: '#A78BFA', 
-                    fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' 
+                  <button onClick={() => navigate('buy-magazine', featured)} style={{
+                    background: 'rgba(124,111,255,0.12)', border: '1px solid rgba(124,111,255,0.3)',
+                    borderRadius: 12, padding: '10px 22px', color: '#A78BFA',
+                    fontFamily: bodyFont, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.2)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.5)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.3)'; }}>
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.2)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.5)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,111,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(124,111,255,0.3)'; }}>
                     {lang === 'bn' ? 'সংখ্যাটি নিন →' : 'Get Issue →'}
                   </button>
                 )}
@@ -260,7 +268,7 @@ function HomePage({ navigate, isLoggedIn, hasPurchased, lang, T, magazines, lead
       <div style={{ background: 'rgba(15,17,32,0.4)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
         <MiniLeaderboard navigate={navigate} lang={lang} T={T} leaderboard={leaderboard} />
       </div>
-      
+
       <style>{`
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
       `}</style>

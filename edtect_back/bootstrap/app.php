@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'CheckPermission' => \App\Http\Middleware\CheckPermission::class,
+            'admin'           => \App\Http\Middleware\EnsureAdmin::class,
         ]);
         // Ensure API requests return 401 instead of redirecting
         $middleware->redirectTo(function ($request) {

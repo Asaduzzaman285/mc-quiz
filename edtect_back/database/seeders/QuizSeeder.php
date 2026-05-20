@@ -4,21 +4,38 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Quiz;
+use App\Models\Magazine;
 use App\Models\Question;
 
 class QuizSeeder extends Seeder
 {
     public function run(): void
     {
-        $quiz = Quiz::create([
-            'title' => 'MCQuiz April 2026 — Monthly Challenge',
-            'date' => '2026-04-30',
-            'time' => '11:59 PM',
-            'duration' => 3,
-            'questions_count' => 12,
-            'prize_pool' => 15000,
-            'status' => 'upcoming',
-        ]);
+        // Get the featured magazine (April 2026)
+        $magazine = Magazine::where('featured', true)->first() ?? Magazine::first();
+
+        $quiz = Quiz::updateOrCreate(
+            ['name' => 'MCQuiz April 2026 — Monthly Challenge'],
+            [
+                'title'            => 'MCQuiz April 2026 — Monthly Challenge',
+                'magazine_id'      => $magazine?->id,
+                'date'             => '2026-04-01',
+                'time'             => '11:59 PM',
+                'duration'         => 3,
+                'deadline'         => '2026-12-31',   // Far future so demo always works
+                'resultDate'       => '2027-01-05',
+                'total_marks'      => 200,
+                'duration_minutes' => 3,
+                'questions_count'  => 12,
+                'prize_pool'       => 35000,
+                'status'           => 'ongoing',
+            ]
+        );
+
+        // Only seed questions if none exist
+        if ($quiz->questions()->count() > 0) {
+            return;
+        }
 
         $questions = [
             ['question' => 'Bangladesh became a member of the United Nations in which year?', 'options' => ['1972', '1973', '1974', '1975'], 'correct' => 2, 'category' => 'Bangladesh Affairs'],
@@ -37,12 +54,14 @@ class QuizSeeder extends Seeder
 
         foreach ($questions as $q) {
             Question::create([
-                'quiz_id' => $quiz->id,
-                'question_text' => $q['question'],
-                'options' => $q['options'],
+                'quiz_id'        => $quiz->id,
+                'question_text'  => $q['question'],
+                'options'        => $q['options'],
                 'correct_option' => $q['correct'],
-                'category' => $q['category'],
+                'category'       => $q['category'],
             ]);
         }
+
+        $quiz->update(['questions_count' => count($questions)]);
     }
 }

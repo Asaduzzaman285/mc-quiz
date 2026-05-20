@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MCQUIZ_DATA } from './data';
 
-export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T, quizzes }) {
-  const currentQuiz = quizzes?.[0] || { deadline: '2026-04-30', resultDate: 'May 05, 2026' };
-  const quizDeadline = currentQuiz.deadline;
-  const resultAnnounceDate = currentQuiz.resultDate;
+export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T, quizzes, activeMagazine, activeQuiz }) {
+  const currentQuiz = activeQuiz ?? quizzes?.[0] ?? null;
+  const quizDeadline = currentQuiz?.deadline ?? '2027-12-31';
+  const resultAnnounceDate = currentQuiz?.resultDate ?? currentQuiz?.resultdate ?? 'TBD';
+  const questionsCount = currentQuiz?.questions_count ?? 0;
+  const durationMins = currentQuiz?.duration_minutes ?? 3;
   const bodyFont = lang === 'bn' ? "'Anek Bangla', sans-serif" : 'Inter, sans-serif';
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
@@ -17,10 +18,10 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
     tick(); const id = setInterval(tick, 1000); return () => clearInterval(id);
   }, []);
 
-  const labels = lang === 'bn' ? ['দিন','ঘণ্টা','মিনিট','সেকেন্ড'] : ['Days','Hours','Mins','Secs'];
+  const labels = lang === 'bn' ? ['দিন', 'ঘণ্টা', 'মিনিট', 'সেকেন্ড'] : ['Days', 'Hours', 'Mins', 'Secs'];
   const TimeBox = ({ v, label }) => (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ background: 'rgba(124,111,255,0.15)', border: '1px solid rgba(124,111,255,0.3)', borderRadius: 12, padding: '12px 16px', minWidth: 60, fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 28, color: '#A78BFA', lineHeight: 1 }}>{String(v).padStart(2,'0')}</div>
+      <div style={{ background: 'rgba(124,111,255,0.15)', border: '1px solid rgba(124,111,255,0.3)', borderRadius: 12, padding: '12px 16px', minWidth: 60, fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 28, color: '#A78BFA', lineHeight: 1 }}>{String(v).padStart(2, '0')}</div>
       <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#7A82A8', marginTop: 5 }}>{label}</div>
     </div>
   );
@@ -60,11 +61,19 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
             )}
           </div>
 
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 24, color: '#F0F2FF', margin: '0 0 8px', letterSpacing: '-0.6px' }}>{T('ql_quiz_name')}</h2>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 24, color: '#F0F2FF', margin: '0 0 8px', letterSpacing: '-0.6px' }}>
+            {currentQuiz?.name ?? currentQuiz?.title ?? T('ql_quiz_name')}
+            {activeMagazine && <span style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 500, color: '#A78BFA', marginTop: 4 }}>📖 {activeMagazine.name}</span>}
+          </h2>
           <p style={{ fontFamily: bodyFont, fontSize: 15, color: '#7A82A8', margin: '0 0 26px', lineHeight: 1.7 }}>{T('ql_quiz_desc')}</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
-            {[[T('ql_deadline'), lang === 'bn' ? '৩০ এপ্রিল ২০২৬' : 'April 30, 2026'], [T('ql_quiz_time'), lang === 'bn' ? '৩ মিনিট' : '3 Minutes'], [T('ql_questions'), lang === 'bn' ? '২০০টি MCQ' : '200 MCQs'], [T('ql_entry'), T('ql_entry_free')]].map(([label, value]) => (
+            {[
+              [T('ql_deadline'), quizDeadline ? quizDeadline.toString().slice(0, 10) : '—'],
+              [T('ql_quiz_time'), `${durationMins} ${lang === 'bn' ? 'মিনিট' : 'min'}`],
+              [T('ql_questions'), questionsCount > 0 ? `${questionsCount} MCQ` : (lang === 'bn' ? 'লোড হচ্ছে…' : 'Loading…')],
+              [T('ql_entry'), T('ql_entry_free')],
+            ].map(([label, value]) => (
               <div key={label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: '13px 15px' }}>
                 <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#7A82A8', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
                 <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, color: '#F0F2FF' }}>{value}</div>
@@ -90,7 +99,7 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
                       fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 28, color: '#D4A843', lineHeight: 1,
                       boxShadow: '0 0 18px rgba(212,168,67,0.25), inset 0 0 12px rgba(212,168,67,0.05)',
                       textShadow: '0 0 12px rgba(212,168,67,0.6)',
-                    }}>{String(box.v).padStart(2,'0')}</div>
+                    }}>{String(box.v).padStart(2, '0')}</div>
                     <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#7A82A8', marginTop: 5 }}>{box.label}</div>
                   </div>
                   {i < 3 && <div style={{ color: '#D4A843', fontSize: 24, fontWeight: 700, paddingTop: 12, opacity: 0.6 }}>:</div>}
@@ -103,7 +112,7 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex' }}>
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} style={{ width: 30, height: 30, borderRadius: '50%', marginLeft: i > 0 ? -9 : 0, background: `hsl(${220+i*28},65%,55%)`, border: '2px solid #0C0E1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 11, color: '#fff' }}>{String.fromCharCode(65+i)}</div>
+                  <div key={i} style={{ width: 30, height: 30, borderRadius: '50%', marginLeft: i > 0 ? -9 : 0, background: `hsl(${220 + i * 28},65%,55%)`, border: '2px solid #0C0E1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 11, color: '#fff' }}>{String.fromCharCode(65 + i)}</div>
                 ))}
               </div>
               <span style={{ fontFamily: bodyFont, fontSize: 14, color: '#7A82A8' }}><strong style={{ color: '#F0F2FF' }}>১,২৪৭</strong> {T('ql_participants')}</span>
@@ -111,8 +120,8 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
 
             {hasPurchased ? (
               <button onClick={() => navigate('live-quiz')} style={{ background: 'linear-gradient(135deg, #7C6FFF, #A78BFA)', border: 'none', borderRadius: 12, padding: '12px 28px', color: '#fff', fontFamily: bodyFont, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 20px rgba(124,111,255,0.4)' }}
-              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
               >{T('ql_enter_now')}</button>
             ) : (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -127,7 +136,7 @@ export default function QuizLobby({ navigate, isLoggedIn, hasPurchased, lang, T,
         <div style={{ background: 'linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.04))', border: '1px solid rgba(212,168,67,0.25)', borderRadius: 18, padding: '24px 28px', marginBottom: 20, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(212,168,67,0.15)', border: '1px solid rgba(212,168,67,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
           <div style={{ flex: 1 }}>

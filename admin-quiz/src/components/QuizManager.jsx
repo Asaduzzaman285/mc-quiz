@@ -8,12 +8,12 @@ const QuizManager = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
-        name: '', 
-        magazine_id: '', 
-        date: '', 
-        deadline: '', 
-        resultDate: '', 
-        total_marks: 100, 
+        name: '',
+        magazine_id: '',
+        date: '',
+        deadline: '',
+        resultDate: '',
+        total_marks: 100,
         duration_minutes: 30
     });
     const [uploading, setUploading] = useState(null);
@@ -75,7 +75,7 @@ const QuizManager = () => {
 
         try {
             const res = await axios.post(`${API_URL}/admin/quizzes/${quizId}/upload-questions`, data, {
-                headers: { 
+                headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
@@ -136,7 +136,7 @@ const QuizManager = () => {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>{quiz.name}</h3>
                                     <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Deadline: {quiz.deadline}</div>
 
@@ -144,10 +144,10 @@ const QuizManager = () => {
                                         <Upload size={24} color="#D4A843" style={{ marginBottom: '10px' }} />
                                         <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>Questions Content</div>
                                         <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '12px' }}>Upload .csv file with 200 questions</div>
-                                        
+
                                         <label style={{ display: 'inline-block', background: '#fff', border: '1px solid #D4A843', color: '#D4A843', borderRadius: '8px', padding: '8px 16px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
                                             {uploading === quiz.id ? 'Uploading...' : 'Browse CSV'}
-                                            <input type="file" accept=".csv" hidden onChange={(e) => handleCsvUpload(quiz.id, e.target.files[0])} />
+                                            <input type="file" accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel" hidden onChange={(e) => handleCsvUpload(quiz.id, e.target.files[0])} />
                                         </label>
                                     </div>
 
@@ -174,11 +174,11 @@ const QuizManager = () => {
                         <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div style={{ gridColumn: 'span 2' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Quiz Name</label>
-                                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Monthly Challenge April 2026" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Monthly Challenge April 2026" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div style={{ gridColumn: 'span 2' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Linked Magazine (Optional)</label>
-                                <select value={formData.magazine_id} onChange={e => setFormData({...formData, magazine_id: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff' }}>
+                                <select value={formData.magazine_id} onChange={e => setFormData({ ...formData, magazine_id: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff' }}>
                                     <option value="">Select a Magazine</option>
                                     {magazines.map(mag => (
                                         <option key={mag.id} value={mag.id}>{mag.name} ({mag.month})</option>
@@ -187,23 +187,23 @@ const QuizManager = () => {
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Quiz Date</label>
-                                <input type="date" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Submission Deadline</label>
-                                <input type="date" required value={formData.deadline} onChange={e => setFormData({...formData, deadline: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="date" required value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Duration (Minutes)</label>
-                                <input type="number" required value={formData.duration_minutes} onChange={e => setFormData({...formData, duration_minutes: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="number" required value={formData.duration_minutes} onChange={e => setFormData({ ...formData, duration_minutes: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Total Marks</label>
-                                <input type="number" required value={formData.total_marks} onChange={e => setFormData({...formData, total_marks: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="number" required value={formData.total_marks} onChange={e => setFormData({ ...formData, total_marks: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div style={{ gridColumn: 'span 2' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Result Announce Date</label>
-                                <input type="date" required value={formData.resultDate} onChange={e => setFormData({...formData, resultDate: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="date" required value={formData.resultDate} onChange={e => setFormData({ ...formData, resultDate: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
                             </div>
                             <div style={{ gridColumn: 'span 2', display: 'flex', gap: '12px', marginTop: '12px' }}>
                                 <button type="submit" style={{ flex: 1, background: '#D4A843', color: '#fff', border: 'none', borderRadius: '12px', padding: '14px', fontWeight: 700, cursor: 'pointer' }}>Save Quiz</button>

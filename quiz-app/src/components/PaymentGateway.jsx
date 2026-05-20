@@ -25,21 +25,21 @@ export default function PaymentGateway({ magazine, navigate, onSuccess, lang, T 
   const handlePay = async () => {
     if (method !== 'card' && !num.match(/^01[3-9]\d{8}$/)) { setError(lang === 'bn' ? 'সঠিক মোবাইল নম্বর দিন' : 'Enter valid mobile number'); return; }
     if (!pin || pin.length < 4) { setError(lang === 'bn' ? 'PIN দিন' : 'Enter your PIN'); return; }
-    setError(''); 
+    setError('');
     setStep('processing');
-    
+
     try {
-        // Simulate gateway latency
-        await new Promise(r => setTimeout(r, 2000));
-        
-        // Real backend recording
-        await MCQUIZ_API.purchaseMagazine(magazine.id);
-        
-        setStep('success');
-        onSuccess && onSuccess(magazine.id);
+      // Simulate gateway latency
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Real backend recording
+      await MCQUIZ_API.purchaseMagazine(magazine.id);
+
+      setStep('success');
+      onSuccess && onSuccess(magazine.id);
     } catch (err) {
-        setStep('details');
-        setError(err.message || 'Payment failed');
+      setStep('details');
+      setError(err.message || 'Payment failed');
     }
   };
 
@@ -61,7 +61,7 @@ export default function PaymentGateway({ magazine, navigate, onSuccess, lang, T 
           {T('pay_success_desc')} <strong style={{ color: '#F0F2FF' }}>{magazine.name}</strong>
         </p>
         <p style={{ fontFamily: bodyFont, fontSize: 14, color: '#7A82A8', margin: '0 0 28px', lineHeight: 1.6 }}>
-          {T('pay_success_note')} <strong style={{ color: '#D4A843' }}>April 2026 {T('pay_success_note2')}</strong> — {lang === 'bn' ? '৩০ এপ্রিল ২০২৬ পর্যন্ত বৈধ' : 'valid until April 30, 2026'}.
+          {T('pay_success_note')} <strong style={{ color: '#D4A843' }}>{magazine.name} {T('pay_success_note2')}</strong>.
         </p>
         <div style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 12, padding: '16px 18px', marginBottom: 24, textAlign: 'left' }}>
           <div style={{ fontFamily: bodyFont, fontSize: 13, color: '#D4A843', fontWeight: 600, marginBottom: 8 }}>{T('pay_what_next')}</div>
@@ -96,7 +96,7 @@ export default function PaymentGateway({ magazine, navigate, onSuccess, lang, T 
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, color: '#F0F2FF', marginBottom: 4 }}>{magazine.name}</div>
             <div style={{ fontFamily: bodyFont, fontSize: 12, color: '#7A82A8', marginBottom: 6 }}>{magazine.pages} {T('pay_pages')} · PDF · {T('pay_quiz_entry')}</div>
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {magazine.topics.slice(0,3).map(t => <span key={t} style={{ background: `${magazine.color}15`, border: `1px solid ${magazine.color}30`, borderRadius: 5, padding: '2px 7px', fontFamily: bodyFont, fontSize: 11, color: magazine.color }}>{t}</span>)}
+              {magazine.topics.slice(0, 3).map(t => <span key={t} style={{ background: `${magazine.color}15`, border: `1px solid ${magazine.color}30`, borderRadius: 5, padding: '2px 7px', fontFamily: bodyFont, fontSize: 11, color: magazine.color }}>{t}</span>)}
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>

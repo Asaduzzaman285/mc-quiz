@@ -1,101 +1,109 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  Shield,
-  Users,
-  Eye,
-  BookOpen,
-  ListTodo
-} from 'lucide-react';
+import { Shield, Users, Eye, BookOpen, ListTodo, Trophy, CreditCard, LayoutDashboard } from 'lucide-react';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName');
 
-  // Get permissions from localStorage (stored during login)
-  const permissionsString = localStorage.getItem('permissions');
-  const permissions = permissionsString ? JSON.parse(permissionsString) : [];
-
-  // Get roles
   const rolesString = localStorage.getItem('userRoles');
   const roles = rolesString ? JSON.parse(rolesString) : [];
   const hasAdminRole = roles.includes('admin');
 
-  // Check for specific permissions
-  const hasUserList = permissions.includes('user list') || hasAdminRole;
-  const hasRoleList = permissions.includes('role list') || hasAdminRole;
-  const hasPermissionList = permissions.includes('permission list') || hasAdminRole;
+  const permissionsString = localStorage.getItem('permissions');
+  const permissions = permissionsString ? JSON.parse(permissionsString) : [];
 
-  // Show Access Control menu only if user has at least one of the required permissions
-  const showAccessControl = hasUserList || hasRoleList || hasPermissionList;
+  const hasUserList = permissions.includes('manage-users') || hasAdminRole;
+  const hasRoleList = hasAdminRole;
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('permissions'); // Also remove permissions on logout
-    localStorage.removeItem('userRoles');
+    localStorage.clear();
     navigate('/login');
   };
+
+  const linkStyle = ({ isActive }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 16px',
+    borderRadius: '10px',
+    margin: '2px 8px',
+    textDecoration: 'none',
+    fontWeight: isActive ? 700 : 500,
+    fontSize: '14px',
+    color: isActive ? '#7C6FFF' : '#475569',
+    background: isActive ? 'rgba(124,111,255,0.1)' : 'transparent',
+    transition: 'all 0.2s',
+  });
 
   return (
     <nav className="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
       <div className="sb-sidenav-menu">
-        <div className="nav text-dark">
-          <NavLink className="nav-link" to="/admin/profile" activeClassName="active">
-            <div className="sb-nav-link-icon">
-              <Users size={20} />
-            </div>
-            Profile
+        <div className="nav" style={{ paddingTop: 8 }}>
+
+          {/* Dashboard */}
+          <NavLink to="/admin/home" style={linkStyle}>
+            <LayoutDashboard size={18} /> Dashboard
           </NavLink>
 
-          {/* Access Control Menu - Conditionally Rendered */}
-          {showAccessControl && (
-            <>
-              <div
-                className="nav-link d-flex justify-content-between align-items-center"
-                data-bs-toggle="collapse"
-                data-bs-target="#accessControlMenu"
-                aria-expanded="false"
-                aria-controls="accessControlMenu"
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="d-flex align-items-center">
-                  <div className="sb-nav-link-icon">
-                    <Shield size={20} />
-                  </div>
-                  Access Control
-                </div>
-                <i className="fas fa-chevron-down"></i>
-              </div>
-              <div className="collapse" id="accessControlMenu">
-                {/* User Menu Item - Only show if user has "user list" permission */}
-                {hasUserList && (
-                  <NavLink className="nav-link ms-4" to="/admin/user" style={{ fontSize: '13px' }}>
-                    <Users size={16} className="me-2" />
-                    Students
-                  </NavLink>
-                )}
+          {/* Quiz System */}
+          <div style={{ padding: '8px 16px 4px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>
+            Quiz System
+          </div>
 
-                {/* Role Menu Item - Only show if user has "role list" permission */}
-                {hasRoleList && (
-                  <NavLink className="nav-link ms-4" to="/admin/role" style={{ fontSize: '13px' }}>
-                    <Eye size={16} className="me-2" />
-                    Role
-                  </NavLink>
-                )}
+          <NavLink to="/admin/magazines" style={linkStyle}>
+            <BookOpen size={18} /> Magazines
+          </NavLink>
+
+          <NavLink to="/admin/quizzes" style={linkStyle}>
+            <ListTodo size={18} /> Quizzes
+          </NavLink>
+
+          <NavLink to="/admin/leaderboard" style={linkStyle}>
+            <Trophy size={18} /> Leaderboard
+          </NavLink>
+
+          <NavLink to="/admin/purchases" style={linkStyle}>
+            <CreditCard size={18} /> Purchases
+          </NavLink>
+
+          {/* Access Control */}
+          {(hasUserList || hasRoleList) && (
+            <>
+              <div style={{ padding: '8px 16px 4px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>
+                Access Control
               </div>
+
+              {hasUserList && (
+                <NavLink to="/admin/user" style={linkStyle}>
+                  <Users size={18} /> Students
+                </NavLink>
+              )}
+
+              {hasRoleList && (
+                <NavLink to="/admin/role" style={linkStyle}>
+                  <Shield size={18} /> Roles
+                </NavLink>
+              )}
             </>
           )}
 
-          <div className="sb-sidenav-menu-heading">Quiz System</div>
-          <NavLink className="nav-link" to="/admin/magazines">
-            <div className="sb-nav-link-icon"><BookOpen size={18} /></div>
-            Magazines
+          {/* Profile */}
+          <div style={{ padding: '8px 16px 4px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>
+            Account
+          </div>
+
+          <NavLink to="/admin/profile" style={linkStyle}>
+            <Eye size={18} /> Profile
           </NavLink>
-          <NavLink className="nav-link" to="/admin/quizzes">
-            <div className="sb-nav-link-icon"><ListTodo size={18} /></div>
-            Quizzes
-          </NavLink>
+
+          {/* Logout */}
+          <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '10px', margin: '2px 8px', border: 'none', background: 'transparent', fontWeight: 500, fontSize: '14px', color: '#EF4444', cursor: 'pointer', width: 'calc(100% - 16px)', textAlign: 'left', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+            Logout
+          </button>
 
         </div>
       </div>

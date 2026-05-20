@@ -77,7 +77,8 @@ class AuthController extends Controller
         \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'api']);
 
-        $user->assignRole('student');
+        // Assign role on BOTH guards so it works regardless of context
+        $user->assignRole(\Spatie\Permission\Models\Role::where('name', 'student')->where('guard_name', 'api')->first());
 
         Auth::login($user);
 
@@ -137,12 +138,12 @@ class AuthController extends Controller
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'quizHistory' => $user->quizResults()->with('quiz')->latest()->limit(5)->get()->map(function($result) {
                 return [
-                    'month' => $result->quiz->date->format('F Y'),
-                    'score' => $result->score,
-                    'rank' => $result->rank,
+                    'month'   => optional($result->quiz)->date ? $result->quiz->date->format('F Y') : '—',
+                    'score'   => $result->score,
+                    'rank'    => $result->rank,
                     'correct' => $result->correct_answers,
-                    'total' => $result->total_questions,
-                    'timeSec' => $result->completion_time
+                    'total'   => $result->total_questions,
+                    'timeSec' => $result->completion_time,
                 ];
             })
         ];
@@ -221,18 +222,30 @@ class AuthController extends Controller
 
     public function userList()
     {
-        $users = User::role('student')->latest()->get()->map(function($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'division' => $user->division,
-                'district' => $user->district,
-                'subscription_status' => $user->subscription_status,
-                'joining_date' => $user->joining_date,
-            ];
-        });
+        // Get all users who are NOT admin — includes users with student role
+        // and users with no role yet (registered before role fix)
+        $adminIds = \DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', 'admin')
+            ->pluck('model_has_roles.model_id')
+            ->toArray();
+
+        $users = User::whereNotIn('id', $adminIds)
+            ->latest()
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id'                  => $user->id,
+                    'name'                => $user->name,
+                    'email'               => $user->email,
+                    'phone'               => $user->phone,
+                    'division'            => $user->division,
+                    'district'            => $user->district,
+                    'subscription_status' => $user->subscription_status,
+                    'joining_date'        => $user->joining_date,
+                    'created_at'          => $user->created_at?->format('Y-m-d H:i'),
+                ];
+            });
 
         return $this->set_response($users, 200, 'success', ['Students list.']);
     }

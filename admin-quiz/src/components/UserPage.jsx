@@ -147,7 +147,9 @@ const UserPage = ({ sidebarVisible = false }) => {
         }
       });
       const data = await res.json();
-      const rolelist = data?.data?.rolelist ?? data?.rolelist ?? data?.data?.data ?? [];
+      const rolelist = Array.isArray(data?.data)
+        ? data.data
+        : data?.data?.rolelist ?? data?.rolelist ?? data?.data?.data ?? [];
       setRoles(Array.isArray(rolelist) ? rolelist : []);
     } catch (err) {
       console.error('fetchRoles error', err);
@@ -1205,10 +1207,10 @@ const UserPage = ({ sidebarVisible = false }) => {
                     <td className="py-1 px-3">{u.phone || '-'}</td>
                     <td className="py-1 px-3">{u.district || '-'}</td>
                     <td className="py-1 px-3">
-                      <span style={{ 
-                        padding: '2px 8px', 
-                        borderRadius: '10px', 
-                        fontSize: '10px', 
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        fontSize: '10px',
                         fontWeight: '700',
                         background: u.subscription_status === 'active' ? '#F0FDF4' : '#FEF2F2',
                         color: u.subscription_status === 'active' ? '#16A34A' : '#DC2626'

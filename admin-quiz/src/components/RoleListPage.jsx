@@ -138,7 +138,9 @@ const RoleListPage = ({ sidebarVisible = false }) => {
         data?.code === 200 ||
         data?.status === '200';
 
-      const roleList = data?.data?.rolelist ?? data?.rolelist ?? data?.data?.data?.rolelist ?? [];
+      const roleList = Array.isArray(data?.data)
+        ? data.data
+        : data?.data?.rolelist ?? data?.rolelist ?? data?.data?.data?.rolelist ?? [];
 
       if (ok) {
         setAllRoles(Array.isArray(roleList) ? roleList : []);
@@ -182,7 +184,9 @@ const RoleListPage = ({ sidebarVisible = false }) => {
         data?.code === 200 ||
         data?.status === '200';
 
-      const permissionList = data?.data?.permissionlist ?? data?.permissionlist ?? data?.data?.data?.permissionlist ?? [];
+      const permissionList = Array.isArray(data?.data)
+        ? data.data
+        : data?.data?.permissionlist ?? data?.permissionlist ?? data?.data?.data?.permissionlist ?? [];
 
       console.log('📋 Extracted permission list:', permissionList);
 
