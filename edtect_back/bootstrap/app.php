@@ -1,5 +1,9 @@
 <?php
 
+// Suppress deprecation notices from third-party packages (e.g. arcanedev/support on PHP 8.3)
+// These notices corrupt JSON API responses when output to stdout
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
